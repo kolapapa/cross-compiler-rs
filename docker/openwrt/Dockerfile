@@ -2,8 +2,9 @@ FROM ubuntu:18.04
 
 # link: https://mirrors.tuna.tsinghua.edu.cn/help/ubuntu/
 # Ubuntu sources
+# RUN cp /etc/apt/sources.list /etc/apt/sources.list.bak
 RUN cp /etc/apt/sources.list /etc/apt/sources.list.bak
-RUN echo "deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic main restricted universe multiverse\ndeb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-updates main restricted universe multiverse\ndeb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-backports main restricted universe multiverse\ndeb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-security main restricted universe multiverse\n" > /etc/apt/sources.list
+RUN echo "deb http://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic main restricted universe multiverse\ndeb http://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-updates main restricted universe multiverse\ndeb http://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-backports main restricted universe multiverse\ndeb http://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-security main restricted universe multiverse\n" > /etc/apt/sources.list
 
 
 # These versions are based on https://archive.openwrt.org/releases
@@ -19,8 +20,8 @@ ENV TARGET="mipsel-unknown-linux-musl"
 ENV RUSTUP_DIST_SERVER="https://mirrors.tuna.tsinghua.edu.cn/rustup"
 
 # This is the complier from openwrt SDK
-ENV LINKER="mipsel-openwrt-linux-musl-gcc-5.4.0"
-
+ENV LINKER="mipsel-openwrt-linux-musl-gcc"
+ 
 # Zlib ARGS
 # https://github.com/madler/zlib/releases
 ARG ZLIB_VERSION="1.2.11"
@@ -47,7 +48,7 @@ ENV TARGET_C_INCLUDE_PATH=/usr/local/openwrt/include/
 
 # Download OpenWRT SDK
 # RUN wget -P /tmp/ https://archive.openwrt.org/releases/$OPENWRT_VERSION/targets/ramips/mt7620/lede-sdk-$OPENWRT_VERSION-ramips-mt7620_gcc-$GCC_VERSION.Linux-x86_64.tar.xz
-RUN wget -P /tmp/ http://archive.openwrt.org/releases/$OPENWRT_VERSION/targets/ramips/mt7621/openwrt-sdk-$$OPENWRT_VERSION-ramips-mt7621_gcc-$GCC_VERSION.Linux-x86_64.tar.xz
+RUN wget -P /tmp/ http://archive.openwrt.org/releases/$OPENWRT_VERSION/targets/ramips/mt7621/openwrt-sdk-$OPENWRT_VERSION-ramips-mt7621_gcc-$GCC_VERSION.Linux-x86_64.tar.xz
  
 # Extract OpenWRT SDK
 WORKDIR /tmp/
@@ -62,6 +63,11 @@ RUN cp -R /tmp/openwrt-sdk-$OPENWRT_VERSION-ramips-mt7621_gcc-$GCC_VERSION.Linux
 # Add compiler to PATH
 ENV STAGING_DIR="/usr/local/openwrt/"
 ENV PATH="$STAGING_DIR/toolchain-mipsel_24kc_gcc-$GCC_VERSION/bin:$PATH"
+
+ENV AR_mipsel_unknown_linux_musl=mipsel-openwrt-linux-musl-ar
+ENV CC_mipsel_unknown_linux_musl=mipsel-openwrt-linux-musl-gcc
+ENV CXX_mipsel_unknown_linux_musl=mipsel-openwrt-linux-musl-g++
+ENV CARGO_TARGET_MIPSEL_UNKNOWN_LINUX_MUSL_LINKER=mipsel-openwrt-linux-musl-gcc
 
 # Download Zlib
 RUN wget https://github.com/madler/zlib/archive/v$ZLIB_VERSION.tar.gz

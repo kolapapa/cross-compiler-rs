@@ -1,6 +1,6 @@
 version: '3'
 services:
-  lede:
+  openwrt:
     build:
       dockerfile: docker/openwrt/Dockerfile
       context: .
