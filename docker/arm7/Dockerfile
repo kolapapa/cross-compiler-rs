@@ -1,11 +1,19 @@
 FROM ubuntu:18.04
 
+# link: https://mirrors.tuna.tsinghua.edu.cn/help/ubuntu/
+# Ubuntu sources
+RUN cp /etc/apt/sources.list /etc/apt/sources.list.bak
+RUN echo "deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic main restricted universe multiverse\ndeb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-updates main restricted universe multiverse\ndeb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-backports main restricted universe multiverse\ndeb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-security main restricted universe multiverse\n" > /etc/apt/sources.list
+
+
 ARG GCC_VERSION="arm-linux-gnueabihf-gcc-7"
 
 # Rust ARGS
-ARG RUST_VERSION=stable
+ARG RUST_VERSION=nightly
 ENV TARGET="armv7-unknown-linux-gnueabihf"
 ENV LINKER="arm-linux-gnueabihf-gcc-7"
+ENV RUSTUP_DIST_SERVER="https://mirrors.tuna.tsinghua.edu.cn/rustup"
+
 
 # Zlib ARGS
 # https://github.com/madler/zlib/releases
@@ -75,7 +83,7 @@ RUN /root/.cargo/bin/rustup target add $TARGET
 ENV PATH="/root/.cargo/bin:$PATH"
 
 # Setup rust to to use mipsel-unknown-linux-musl to use the openwrt mips compiler
-RUN echo "[target.TARGET_TRIPLE]\nlinker = \"LINKER_PATH\"\n\n[target.$TARGET]\nlinker = \"$LINKER\"\n" > ~/.cargo/config
+RUN echo "[source.crates-io]\nreplace-with = 'rustcc'\n[source.rustcc]\nregistry = \"https://code.aliyun.com/rustcc/crates.io-index.git\"\n[target.TARGET_TRIPLE]\nlinker = \"LINKER_PATH\"\n\n[target.$TARGET]\nlinker = \"$LINKER\"\n" > ~/.cargo/config
 
 # Don't forget to clean up after
 RUN rm -rf /tmp/*

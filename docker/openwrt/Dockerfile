@@ -1,13 +1,22 @@
 FROM ubuntu:18.04
 
+# link: https://mirrors.tuna.tsinghua.edu.cn/help/ubuntu/
+# Ubuntu sources
+RUN cp /etc/apt/sources.list /etc/apt/sources.list.bak
+RUN echo "deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic main restricted universe multiverse\ndeb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-updates main restricted universe multiverse\ndeb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-backports main restricted universe multiverse\ndeb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ bionic-security main restricted universe multiverse\n" > /etc/apt/sources.list
+
+
 # These versions are based on https://archive.openwrt.org/releases
 # For openwrt this is using: ramips, mt7620
-ARG OPENWRT_VERSION="17.01.4"
-ARG GCC_VERSION="5.4.0_musl-1.1.16"
+# ARG OPENWRT_VERSION="17.01.4"
+# ARG GCC_VERSION="5.4.0_musl-1.1.16"
+ARG OPENWRT_VERSION="18.06.1"
+ARG GCC_VERSION="7.3.0_musl"
 
 # Rust ARGS
-ARG RUST_VERSION=stable
+ARG RUST_VERSION=nightly
 ENV TARGET="mipsel-unknown-linux-musl"
+ENV RUSTUP_DIST_SERVER="https://mirrors.tuna.tsinghua.edu.cn/rustup"
 
 # This is the complier from openwrt SDK
 ENV LINKER="mipsel-openwrt-linux-musl-gcc-5.4.0"
@@ -37,13 +46,18 @@ ENV TARGET_CC=$LINKER
 ENV TARGET_C_INCLUDE_PATH=/usr/local/openwrt/include/
 
 # Download OpenWRT SDK
-RUN wget -P /tmp/ https://archive.openwrt.org/releases/$OPENWRT_VERSION/targets/ramips/mt7620/lede-sdk-$OPENWRT_VERSION-ramips-mt7620_gcc-$GCC_VERSION.Linux-x86_64.tar.xz
-
+# RUN wget -P /tmp/ https://archive.openwrt.org/releases/$OPENWRT_VERSION/targets/ramips/mt7620/lede-sdk-$OPENWRT_VERSION-ramips-mt7620_gcc-$GCC_VERSION.Linux-x86_64.tar.xz
+RUN wget -P /tmp/ http://archive.openwrt.org/releases/$OPENWRT_VERSION/targets/ramips/mt7621/openwrt-sdk-$$OPENWRT_VERSION-ramips-mt7621_gcc-$GCC_VERSION.Linux-x86_64.tar.xz
+ 
 # Extract OpenWRT SDK
 WORKDIR /tmp/
-RUN xz -d lede-sdk-$OPENWRT_VERSION-ramips-mt7620_gcc-$GCC_VERSION.Linux-x86_64.tar.xz
-RUN tar xf lede-sdk-$OPENWRT_VERSION-ramips-mt7620_gcc-$GCC_VERSION.Linux-x86_64.tar
-RUN cp -R /tmp/lede-sdk-$OPENWRT_VERSION-ramips-mt7620_gcc-$GCC_VERSION.Linux-x86_64/staging_dir/* /usr/local/openwrt/
+# RUN xz -d lede-sdk-$OPENWRT_VERSION-ramips-mt7620_gcc-$GCC_VERSION.Linux-x86_64.tar.xz
+# RUN tar xf lede-sdk-$OPENWRT_VERSION-ramips-mt7620_gcc-$GCC_VERSION.Linux-x86_64.tar
+# RUN cp -R /tmp/lede-sdk-$OPENWRT_VERSION-ramips-mt7620_gcc-$GCC_VERSION.Linux-x86_64/staging_dir/* /usr/local/openwrt/
+RUN xz -d openwrt-sdk-$OPENWRT_VERSION-ramips-mt7621_gcc-$GCC_VERSION.Linux-x86_64.tar.xz
+RUN tar xf openwrt-sdk-$OPENWRT_VERSION-ramips-mt7621_gcc-$GCC_VERSION.Linux-x86_64.tar
+RUN cp -R /tmp/openwrt-sdk-$OPENWRT_VERSION-ramips-mt7621_gcc-$GCC_VERSION.Linux-x86_64/staging_dir/* /usr/local/openwrt/
+
 
 # Add compiler to PATH
 ENV STAGING_DIR="/usr/local/openwrt/"
@@ -91,7 +105,7 @@ RUN /root/.cargo/bin/rustup target add $TARGET
 ENV PATH="/root/.cargo/bin:$PATH"
 
 # Setup rust to to use mipsel-unknown-linux-musl to use the openwrt mips compiler
-RUN echo "[target.TARGET_TRIPLE]\nlinker = \"LINKER_PATH\"\n\n[target.$TARGET]\nlinker = \"$LINKER\"\n" > ~/.cargo/config
+RUN echo "[source.crates-io]\nreplace-with = 'rustcc'\n[source.rustcc]\nregistry = \"https://code.aliyun.com/rustcc/crates.io-index.git\"\n[target.TARGET_TRIPLE]\nlinker = \"LINKER_PATH\"\n\n[target.$TARGET]\nlinker = \"$LINKER\"\n" > ~/.cargo/config
 
 # Don't forget to clean up after
 RUN rm -rf /tmp/*
