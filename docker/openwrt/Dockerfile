@@ -38,7 +38,10 @@ RUN apt-get update && \
   curl \
   pkg-config \
   wget \
-  xz-utils
+  xz-utils \
+  libtool \
+  autoconf \
+  automake
 
 # Setup directory structure
 RUN mkdir -p /root/.cargo /root/Projects /usr/local/openwrt/
